@@ -2,6 +2,19 @@
 
 A bridge between Qobuz Connect and DLNA speakers. Also supports local audio playback.
 
+> [!NOTE]
+> **About this fork: Device Icons.** This is a fork of
+> [QobuzProxy](https://github.com/leolobato/qobuz-proxy) 1.7.6 by Leonardo Lobato and
+> contributors. It adds one feature: you can choose the **icon** each speaker shows in the
+> Qobuz app (speaker, soundbar, headphones, TV and more). Everything else is QobuzProxy as
+> its authors made it. The feature is described in [Device Icons](#device-icons) and
+> summed up in a single commit, so it can be reviewed and reused as a whole.
+>
+> I am not a professional developer. The feature was written with
+> [Claude Code](https://claude.com/claude-code) and is shared here in case it is useful to
+> the QobuzProxy authors or anyone else. Please read the [disclaimer](#disclaimer-for-this-fork)
+> at the end.
+
 ## Why?
 
 Qobuz has a "Connect" feature (similar to Spotify Connect) that lets you control playback on supported devices from their app. Unfortunately, many popular speakers — most notably **Sonos** — don't support Qobuz Connect natively. This means you can't pick a Sonos speaker as a playback target in the Qobuz app, even though Sonos fully supports DLNA/UPnP streaming.
@@ -20,6 +33,7 @@ QobuzProxy solves this by acting as a virtual Qobuz Connect device on your netwo
 - Streams audio to DLNA renderers (Sonos, Denon HEOS, etc.)
 - Local audio playback via PortAudio (play directly through your machine's speakers/DAC)
 - **Web UI for speaker management** — discover, add, edit, and remove speakers from your browser
+- **Device icons** — choose how each speaker looks in the Qobuz app (speaker, soundbar, headphones, TV, ...)
 - Auto-detects device capabilities to select optimal audio quality
 - Zero-config startup — boot with no config file, set everything up from the web UI
 - Runs on Raspberry Pi, Docker, or any Linux/macOS system
@@ -137,6 +151,41 @@ speakers:
 
 Ports are auto-assigned unless explicitly set via `http_port` and `proxy_port`. See `config.yaml.example` for all available options.
 
+### Device Icons
+
+Each speaker can tell the Qobuz app what kind of device it is. The app uses this to pick the icon it shows in its device list. By default every speaker is a `speaker`.
+
+| `device_type` | Shown as | Protocol value |
+|---|---|---|
+| `speaker` (default) | Speaker | 1 |
+| `streamer` | Streamer | 2 |
+| `tv` | TV | 3 |
+| `soundbar` | Soundbar | 4 |
+| `computer` | Computer | 5 |
+| `mobile` | Mobile | 6 |
+| `cast` | Cast | 7 |
+| `headphones` | Headphones | 8 |
+| `tablet` | Tablet | 9 |
+
+You can set it in three ways:
+
+- **Web UI:** pick a **Device type** when you add or edit a speaker.
+- **`config.yaml`:** add `device_type` to a speaker:
+  ```yaml
+  speakers:
+    - name: "Headphones"
+      backend: local
+      device_type: headphones
+  ```
+  For a single speaker without a `speakers` list, use `device.device_type`.
+- **Environment variable:** `QOBUZPROXY_DEVICE_TYPE=headphones`. With several speakers, give one value per speaker, separated by commas, in the same order as `QOBUZPROXY_DEVICE_NAME`.
+
+An unknown value stops QobuzProxy with an error that lists the valid values.
+
+The device type is sent everywhere the Qobuz app learns about a device: in the mDNS announcement, in the `/streamcore/get-display-info` response and in the Qobuz Connect session (`DeviceInfo.type`).
+
+**Personal observations** (see the [disclaimer](#disclaimer-for-this-fork)): in a single home setup, the Qobuz app on iPad showed a changed icon right away. On Android the new icon only appeared after the device had reconnected, and not consistently; turning Wi-Fi off and on again and restarting the Qobuz app helped. Streamer and soundbar looked similar in the app, but they are different types.
+
 ### Network Requirements
 
 **Important**: QobuzProxy requires `network_mode: host` (Docker) or direct host access for mDNS discovery to work. This allows the Qobuz app to find the device on your local network.
@@ -148,6 +197,16 @@ If you cannot use host networking, consider:
 QobuzProxy registers discovery on the interface whose IPv4 address it advertises.
 It does not join multicast groups on every Docker bridge, so hosts with many
 containers do not need a higher multicast membership limit for Qobuz discovery.
+
+> [!NOTE]
+> **Good to know:** like many tools made for the home network, the QobuzProxy web page does
+> not ask for a password. Anyone connected to the same network can open it in a browser,
+> see which Qobuz account is logged in, and change the speakers. That is fine at home, and
+> it is worth keeping in mind:
+> - Run QobuzProxy on a network you trust, such as your own home network.
+> - Avoid shared or public networks, such as guest Wi-Fi, dorms or offices.
+> - Do not make its ports (8689, 7120 and the ones after them) reachable from the internet,
+>   for example through port forwarding on your router.
 
 ### Configuration
 
@@ -185,10 +244,37 @@ Bug reports and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIB
 
 This project is based on the Qobuz Connect reverse-engineering work done by [Tobias Guyer](https://github.com/tobiasguyer) in [StreamCore32](https://github.com/tobiasguyer/StreamCore32). Thanks to his efforts in figuring out the Qobuz Connect protocol, this project was possible.
 
+The Device Icons feature of this fork builds on:
+
+- **[QobuzProxy](https://github.com/leolobato/qobuz-proxy)** by Leonardo Lobato ([@leolobato](https://github.com/leolobato)) and [contributors](https://github.com/leolobato/qobuz-proxy/graphs/contributors): the software this fork is based on (version 1.7.6). All credit for QobuzProxy itself belongs to them.
+- **[StreamCore32](https://github.com/tobiasguyer/StreamCore32)** by [Tobias Guyer](https://github.com/tobiasguyer): the reverse-engineered Qobuz Connect protocol, including the `DeviceType` values.
+- **[qonductor](https://github.com/nickblt/qonductor)** by [@nickblt](https://github.com/nickblt): a Rust implementation of Qobuz Connect that uses the same device type list and inspired making it configurable.
+- **[qobuz-connect](https://github.com/ciaens/qobuz-connect)** by [@ciaens](https://github.com/ciaens): documents the names the Qobuz web player uses for the device types (`streamer`, `soundbar`, `computer`, `mobile`, `cast`).
+- **[Claude Code](https://claude.com/claude-code)** by Anthropic: the Device Icons feature and its documentation were written with Claude Code.
+
+A machine-readable list of these sources is in [`CITATION.cff`](CITATION.cff).
+
+> [!NOTE]
+> If your work was used in this fork and is not credited, or is credited incorrectly, please
+> [open an issue](../../issues) in this repository or mention [@5treamer](https://github.com/5treamer).
+> Missing or incorrect credits will be added or corrected as soon as possible.
+
 ## Disclaimer
 
 This project was built almost entirely through agentic programming using [Claude Code](https://claude.ai/claude-code). The architecture, implementation, and tests were generated through AI-assisted development with human guidance and review.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The Device Icons feature is contributed by [@5treamer](https://github.com/5treamer) under the same MIT License.
+
+## Disclaimer for this fork
+
+**Testing.** The automated unit tests pass. Beyond that, the Device Icons feature has not been tested systematically; it was only tried briefly in a single home setup.
+
+**Personal experience only.** All statements in this repository about when the feature works or does not work, for example how quickly the Qobuz app shows a changed icon on different devices, describe the personal, anecdotal experience of one person. They are not verified, not representative, and may not apply to other devices, app versions, networks or setups.
+
+**No warranty.** This software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and non-infringement, as set out in the MIT License. Use it at your own risk. To the maximum extent permitted by applicable law, the authors and contributors are not liable for any claim, damages or other liability arising from its use.
+
+**Not affiliated.** This project is not affiliated with, endorsed by or sponsored by Qobuz. "Qobuz" and "Qobuz Connect" are trademarks of their respective owners and are used here only to describe compatibility.
+
+**Sources.** If a source is missing or credited incorrectly, please [open an issue](../../issues) in this repository or mention [@5treamer](https://github.com/5treamer), so it can be added or corrected right away.

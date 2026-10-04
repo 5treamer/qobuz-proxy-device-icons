@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it and the projects it builds on.
+  If a source is missing or credited incorrectly, please open an issue in this
+  repository so it can be corrected.
+title: "QobuzProxy – Device Icons"
+abstract: >-
+  Fork of QobuzProxy 1.7.6 that adds a per-speaker device type, which sets the
+  icon a speaker shows in the Qobuz app.
+type: software
+license: MIT
+repository-code: "https://github.com/5treamer/qobuz-proxy-device-icons"
+authors:
+  - alias: "5treamer"
+  - name: "Claude Code (Anthropic)"
+references:
+  - type: software
+    title: "QobuzProxy"
+    abstract: "The software this fork is based on."
+    authors:
+      - name: "Leonardo Lobato and contributors"
+    repository-code: "https://github.com/leolobato/qobuz-proxy"
+    version: "1.7.6"
+    license: MIT
+  - type: software
+    title: "StreamCore32"
+    abstract: "Reverse-engineered Qobuz Connect protocol, including the DeviceType values."
+    authors:
+      - name: "Tobias Guyer"
+    repository-code: "https://github.com/tobiasguyer/StreamCore32"
+  - type: software
+    title: "qonductor"
+    abstract: "Rust implementation of Qobuz Connect that inspired making the device type configurable."
+    authors:
+      - alias: "nickblt"
+    repository-code: "https://github.com/nickblt/qonductor"
+  - type: software
+    title: "qobuz-connect"
+    abstract: "Documents the Qobuz web player's names for the device types."
+    authors:
+      - alias: "ciaens"
+    repository-code: "https://github.com/ciaens/qobuz-connect"
